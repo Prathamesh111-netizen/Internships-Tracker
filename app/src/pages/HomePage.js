@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useEffect, useState } from "react";
 import { useTheme } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
@@ -15,30 +15,31 @@ import Button from "@mui/material/Button";
 import LaunchIcon from "@mui/icons-material/Launch";
 import Link from "@mui/material/Link";
 
-function MediaControlCard() {
+import LoadingScreen from "../static/load.gif";
+
+function MediaControlCard(props) {
+	const { url, role, location, deadline, image } = props;
+
 	return (
-		<Card sx={{ display: "flex", m: "1rem", width: "40%" }}>
+		<Card sx={{ display: "flex", m: "1rem", width: "500px" }}>
 			<Box sx={{ display: "flex", alignItems: "center", pl: 1, pb: 1 }}>
 				<CardMedia
 					component="img"
 					sx={{ width: "100px" }}
-					// image="https://pbs.twimg.com/profile_images/1455185376876826625/s1AjSxph_400x400.jpg" // google
-					// image="https://pbs.twimg.com/profile_images/1493955414039441408/3e-HhWSW_400x400.jpg" // ibm
-					// image="https://pbs.twimg.com/profile_images/1268196215587397634/sgD5ZWuO_400x400.png" // microsoft
-					// image="https://pbs.twimg.com/profile_images/1400483947319115776/bTfxhuOK_400x400.jpg" // amazon
+					image={image}
 					alt="Live from space album cover"
 				/>
 			</Box>
 			<Box sx={{ display: "flex", flexDirection: "column" }}>
 				<CardContent sx={{ flex: "1 0 auto" }}>
 					<Typography component="div" variant="h5">
-						Role Name
+						{`${role}`}
 					</Typography>
 					<Typography variant="body1" color="text.secondary" component="div">
-						Location
+						{`Location : ${location}`}
 					</Typography>
 					<Typography variant="body1" color="text.secondary" component="div">
-						Deadline
+						{`Deadline : ${deadline}`}
 					</Typography>
 				</CardContent>
 				<Box sx={{ display: "flex", alignItems: "center", pl: 1, pb: 1 }}>
@@ -47,7 +48,7 @@ function MediaControlCard() {
 						endIcon={<LaunchIcon fontSize="small" />}
 						size="small"
 					>
-						<Link href="#" underline="none" sx={{ color: "#fff" }}>
+						<Link href={`${url}`} underline="none" sx={{ color: "#fff" }}>
 							Apply Now
 						</Link>
 					</Button>
@@ -58,6 +59,32 @@ function MediaControlCard() {
 }
 
 export default function HomePage() {
+	const [internships, setInternships] = useState([]);
+	const [load, setLoad] = useState(true);
+
+	useEffect(() => {
+		async function run() {
+			console.log("inside");
+			await axios({
+				request: "get",
+				url: `${process.env.REACT_APP_BACKEND}/internships`,
+				// url: `http://localhost:7890/internships`,
+				headers: { "Access-Control-Allow-Origin": "*" }
+			})
+				.then((res) => {
+					const { data } = res;
+					setTimeout(() => {
+						setInternships(data);
+						setLoad(false);
+						console.log("data", data);
+					}, 6000);
+				})
+				.catch((err) => console.error(err));
+		}
+
+		run();
+	}, []);
+
 	return (
 		<React.Fragment>
 			<Stack
@@ -71,12 +98,16 @@ export default function HomePage() {
 					alignItems: "center"
 				}}
 			>
-				<MediaControlCard />
-				<MediaControlCard />
-				<MediaControlCard />
-				<MediaControlCard />
-				<MediaControlCard />
-				<MediaControlCard />
+				{load == true && (
+					<Box sx={{ display: "flex", alignItems: "center", pl: 1, pb: 1 }}>
+						<CardMedia
+							component="img"
+							sx={{ width: "100px" }}
+							image={LoadingScreen}
+						/>
+					</Box>
+				)}
+				{load == false && internships.map((item, i) => MediaControlCard(item))}
 			</Stack>
 		</React.Fragment>
 	);
